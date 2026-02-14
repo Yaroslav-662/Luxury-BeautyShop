@@ -1,0 +1,45 @@
+{
+  "app": {
+    "title": "Cosmetics E-Commerce",
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "not_found": "Page not found"
+  },
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "cart": "Cart",
+    "profile": "Profile",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgot": "Forgot password?",
+    "submit": "Submit"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "total": "Total",
+    "checkout": "Checkout"
+  },
+  "product": {
+    "add_to_cart": "Add to Cart",
+    "out_of_stock": "Out of Stock",
+    "reviews": "Reviews"
+  },
+
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "noAccount": "No account?",
+    "register": "Register"
+  }
+
+}
