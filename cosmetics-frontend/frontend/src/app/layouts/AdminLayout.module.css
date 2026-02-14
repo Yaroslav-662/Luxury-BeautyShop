@@ -1,0 +1,17 @@
+.wrapper {
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.main {
+  margin-top: 16px;
+}
+
+.logout {
+  margin-left: auto;
+}

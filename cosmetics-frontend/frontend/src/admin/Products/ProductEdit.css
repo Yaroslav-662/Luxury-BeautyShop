@@ -1,0 +1,9 @@
+.product-edit {
+  max-width: 600px;
+}
+
+.product-edit__image {
+  width: 200px;
+  margin-top: 12px;
+  display: block;
+}
