@@ -1,7 +1,6 @@
 // src/features/products/pages/CreateProduct.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UploadsApi } from "@/features/uploads/api/uploads.api";
 import { api } from "@/core/api/axios";
 import Input from "@/shared/ui/Input";
 import Select from "@/shared/ui/Select";
@@ -29,6 +28,7 @@ export default function CreateProduct() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Завантаження категорій з бекенду
   useEffect(() => {
     api
       .get("/api/categories")
@@ -48,7 +48,18 @@ export default function CreateProduct() {
 
     setUploading(true);
     try {
-      const { urls } = await UploadsApi.uploadProductImages(sliced);
+      const urls: string[] = [];
+      for (const file of sliced) {
+        const formData = new FormData();
+        formData.append("image", file);
+        // бекенд очікує POST /api/uploads/products
+        const res = await api.post<{ url: string }>(
+          "/api/uploads/products",
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        urls.push(res.data.url);
+      }
       setForm((p) => ({ ...p, images: [...p.images, ...urls] }));
     } catch (err) {
       console.error(err);
@@ -92,57 +103,49 @@ export default function CreateProduct() {
       <h2 className="text-xl font-bold">Додати новий товар</h2>
 
       <div className="space-y-3">
-        <label htmlFor="name" className="sr-only">
-          Назва
-        </label>
+        <label htmlFor="name" className="sr-only">Назва</label>
         <Input
           id="name"
           placeholder="Назва"
           value={form.name}
+          aria-label="Назва товару"
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
 
-        <label htmlFor="price" className="sr-only">
-          Ціна
-        </label>
+        <label htmlFor="price" className="sr-only">Ціна</label>
         <Input
           id="price"
           type="number"
           placeholder="Ціна"
           value={String(form.price)}
+          aria-label="Ціна товару"
           onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
         />
 
-        <label htmlFor="stock" className="sr-only">
-          Кількість на складі
-        </label>
+        <label htmlFor="stock" className="sr-only">Кількість на складі</label>
         <Input
           id="stock"
           type="number"
           placeholder="Кількість на складі"
           value={String(form.stock)}
+          aria-label="Кількість на складі"
           onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
         />
 
-        <label htmlFor="category" className="sr-only">
-          Категорія
-        </label>
+        <label htmlFor="category" className="sr-only">Категорія</label>
         <Select
           id="category"
           value={form.category}
+          aria-label="Категорія товару"
           onChange={(e) => setForm({ ...form, category: e.target.value })}
         >
           <option value="">— Виберіть категорію —</option>
           {categories.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name}
-            </option>
+            <option key={c._id} value={c._id}>{c.name}</option>
           ))}
         </Select>
 
-        <label htmlFor="description" className="sr-only">
-          Опис
-        </label>
+        <label htmlFor="description" className="sr-only">Опис</label>
         <textarea
           id="description"
           aria-label="Опис товару"
@@ -155,18 +158,21 @@ export default function CreateProduct() {
 
       <div>
         <input
-         ref={fileRef}
-         type="file"
-         accept="image/*"
-         multiple
-         className="hidden"
-         aria-label="Завантажити фото"
-         onChange={uploadFiles}
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          aria-label="Завантажити фото товару"
+          onChange={uploadFiles}
         />
-
-        <Button onClick={pickFiles} disabled={form.images.length >= MAX_IMAGES || uploading}>
+        <Button
+          onClick={pickFiles}
+          disabled={form.images.length >= MAX_IMAGES || uploading}
+        >
           {uploading ? "Завантаження..." : "Додати фото"}
         </Button>
+
         <div className="flex gap-2 mt-2 flex-wrap">
           {form.images.map((url, i) => (
             <div key={url} className="relative w-24 h-24 border rounded overflow-hidden">
@@ -175,6 +181,7 @@ export default function CreateProduct() {
                 type="button"
                 onClick={() => removeImage(url)}
                 className="absolute top-0 right-0 bg-red-500 text-white px-1 text-xs"
+                aria-label="Видалити фото"
               >
                 X
               </button>
@@ -183,6 +190,7 @@ export default function CreateProduct() {
                   type="button"
                   onClick={() => makeMain(i)}
                   className="absolute bottom-0 left-0 bg-yellow-400 text-black px-1 text-xs"
+                  aria-label="Зробити головним фото"
                 >
                   Main
                 </button>
