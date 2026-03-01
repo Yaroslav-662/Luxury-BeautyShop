@@ -9,17 +9,14 @@ import Input from "@/shared/ui/Input";
  */
 type Product = {
   _id: string;
-  name: string;              // Назва товару
-  price: number;             // Ціна
-  stock: number;             // Кількість на складі
-  category?: string;         // ID категорії
-  description: string;       // Опис
-  imagesUrls: string[];      // URL фото (Cloudinary)
+  name: string;
+  price: number;
+  stock: number;
+  category?: string;
+  description: string;
+  imagesUrls: string[];
 };
 
-/**
- * Максимальна кількість фото
- */
 const MAX_IMAGES = 10;
 
 const ProductEdit: React.FC = () => {
@@ -27,20 +24,13 @@ const ProductEdit: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  /**
-   * Дані товару
-   */
   const [product, setProduct] = useState<Product | null>(null);
-
-  /**
-   * Стани
-   */
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   /**
-   * Отримання товару з бекенду
+   * Завантаження товару
    */
   useEffect(() => {
     if (!id) return;
@@ -59,8 +49,7 @@ const ProductEdit: React.FC = () => {
   };
 
   /**
-   * Завантаження фото:
-   * File → POST /api/upload/products → URL → imagesUrls[]
+   * Upload → Cloudinary → URLs
    */
   const uploadImages = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -68,7 +57,6 @@ const ProductEdit: React.FC = () => {
     const files = e.target.files;
     if (!files || !product) return;
 
-    // дозволяє повторно вибрати той самий файл
     e.target.value = "";
 
     const freeSlots = MAX_IMAGES - product.imagesUrls.length;
@@ -77,8 +65,6 @@ const ProductEdit: React.FC = () => {
     setUploading(true);
     try {
       const fd = new FormData();
-
-      // Swagger: images[] — масив файлів
       selectedFiles.forEach((file) => {
         fd.append("images", file);
       });
@@ -101,9 +87,6 @@ const ProductEdit: React.FC = () => {
     }
   };
 
-  /**
-   * Видалення фото (видаляємо URL зі state)
-   */
   const removeImage = (url: string) => {
     if (!product) return;
     setProduct({
@@ -112,9 +95,6 @@ const ProductEdit: React.FC = () => {
     });
   };
 
-  /**
-   * Зробити фото головним (перше в масиві)
-   */
   const makeMainImage = (index: number) => {
     if (!product) return;
     const images = [...product.imagesUrls];
@@ -124,21 +104,18 @@ const ProductEdit: React.FC = () => {
   };
 
   /**
-   * Збереження змін товару
-   * ❗ FormData — як у Swagger
+   * Збереження
    */
   const saveProduct = async () => {
     if (!product) return;
 
     const fd = new FormData();
-
     fd.append("name", product.name);
     fd.append("price", String(product.price));
     fd.append("stock", String(product.stock));
     if (product.category) fd.append("category", product.category);
     fd.append("description", product.description);
 
-    // Swagger: imagesUrls[]
     product.imagesUrls.forEach((url) => {
       fd.append("imagesUrls", url);
     });
@@ -159,12 +136,16 @@ const ProductEdit: React.FC = () => {
     <div className="max-w-2xl mx-auto p-4 space-y-5">
       <h1 className="text-2xl font-bold">Редагування товару</h1>
 
-      {/* Назва товару */}
+      {/* Назва */}
       <div>
-        <label className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="product-name"
+          className="block text-sm font-medium mb-1"
+        >
           Назва товару
         </label>
         <Input
+          id="product-name"
           value={product.name}
           onChange={(e) =>
             setProduct({ ...product, name: e.target.value })
@@ -174,10 +155,14 @@ const ProductEdit: React.FC = () => {
 
       {/* Ціна */}
       <div>
-        <label className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="product-price"
+          className="block text-sm font-medium mb-1"
+        >
           Ціна (грн)
         </label>
         <Input
+          id="product-price"
           type="number"
           value={product.price}
           onChange={(e) =>
@@ -191,10 +176,14 @@ const ProductEdit: React.FC = () => {
 
       {/* Кількість */}
       <div>
-        <label className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="product-stock"
+          className="block text-sm font-medium mb-1"
+        >
           Кількість на складі
         </label>
         <Input
+          id="product-stock"
           type="number"
           value={product.stock}
           onChange={(e) =>
@@ -209,27 +198,26 @@ const ProductEdit: React.FC = () => {
       {/* Опис */}
       <div>
         <label
-         htmlFor="product-description"
-         className="block text-sm font-medium mb-1"
+          htmlFor="product-description"
+          className="block text-sm font-medium mb-1"
         >
-       Опис товару
-      </label>
+          Опис товару
+        </label>
+        <textarea
+          id="product-description"
+          className="w-full p-2 border rounded"
+          rows={4}
+          value={product.description}
+          onChange={(e) =>
+            setProduct({
+              ...product,
+              description: e.target.value,
+            })
+          }
+        />
+      </div>
 
-      <textarea
-      id="product-description"
-      className="w-full p-2 border rounded"
-      rows={4}
-      value={product.description}
-      onChange={(e) =>
-      setProduct({
-        ...product,
-        description: e.target.value,
-      })
-      }
-     />
-     </div>
-
-      {/* Фото товару */}
+      {/* Фото */}
       <div>
         <label className="block text-sm font-medium mb-2">
           Фото товару
@@ -260,25 +248,25 @@ const ProductEdit: React.FC = () => {
             >
               <img
                 src={url}
-                alt={`Фото ${index + 1}`}
+                alt={`Фото товару ${index + 1}`}
                 className="w-full h-full object-cover"
               />
 
-              {/* Видалення фото */}
               <button
                 type="button"
                 onClick={() => removeImage(url)}
                 className="absolute top-0 right-0 bg-red-600 text-white text-xs px-1"
+                aria-label="Видалити фото"
               >
                 ✕
               </button>
 
-              {/* Зробити головним */}
               {index !== 0 && (
                 <button
                   type="button"
                   onClick={() => makeMainImage(index)}
                   className="absolute bottom-0 left-0 bg-yellow-400 text-xs px-1"
+                  aria-label="Зробити головним фото"
                 >
                   Головне
                 </button>
@@ -288,7 +276,7 @@ const ProductEdit: React.FC = () => {
         </div>
       </div>
 
-      {/* Кнопки */}
+      {/* Дії */}
       <div className="flex gap-3">
         <Button onClick={saveProduct} disabled={saving || uploading}>
           {saving ? "Збереження..." : "Зберегти"}
