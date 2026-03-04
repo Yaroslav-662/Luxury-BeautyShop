@@ -35,7 +35,7 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
         {product.price} ₴
       </div>
 
-      <Button onClick={onAdd} className="w-full">
+      <Button onClick={onAdd} aria-label="Додати товар у кошик">
         Додати в кошик
       </Button>
     </div>
