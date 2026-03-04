@@ -5,7 +5,7 @@ export function resolveImage(src?: string): string {
     return "https://placehold.co/600x600?text=No+Image";
   }
 
-  // повний URL (Cloudinary, CDN)
+  // повний URL (Cloudinary, CDN, зовнішні)
   if (src.startsWith("http://") || src.startsWith("https://")) {
     return src;
   }
