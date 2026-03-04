@@ -3,6 +3,7 @@ import React from "react";
 import Button from "@/shared/ui/Button";
 import { useCartStore } from "@/features/cart/model/cart.store";
 import type { Product } from "../model/product.types";
+import { resolveImage } from "@/shared/lib/resolveImage";
 
 interface Props {
   product: Product;
@@ -14,16 +15,16 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
   function onAdd() {
     addToCart({
       id: product._id,
-      title: product.name, // ✅ ВАЖЛИВО
+      title: product.name,
       price: product.price,
-      imageUrl: product.images?.[0],
+      imageUrl: resolveImage(product.images?.[0]),
     });
   }
 
   return (
     <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
       <img
-        src={product.images?.[0]}
+        src={resolveImage(product.images?.[0])}
         alt={product.name}
         className="w-full h-48 object-cover rounded-lg"
       />
