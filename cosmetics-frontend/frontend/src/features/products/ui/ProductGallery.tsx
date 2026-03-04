@@ -13,6 +13,7 @@ export function ProductGallery({ images }: { images: string[] }) {
     return (
       <img
         src="https://placehold.co/600x600?text=No+Image"
+        alt="Немає фото товару"
         className="w-full h-80 object-cover rounded-2xl"
       />
     );
@@ -22,16 +23,24 @@ export function ProductGallery({ images }: { images: string[] }) {
     <div className="grid gap-3">
       <img
         src={resolveImage(safe[active])}
+        alt={`Фото товару ${active + 1}`}
         className="w-full h-80 object-cover rounded-2xl"
       />
 
       {safe.length > 1 && (
         <div className="flex gap-2">
           {safe.map((url, idx) => (
-            <button key={idx} onClick={() => setActive(idx)}>
+            <button
+              key={idx}
+              type="button"
+              aria-label={`Показати фото ${idx + 1}`}
+              onClick={() => setActive(idx)}
+              className="rounded-xl overflow-hidden"
+            >
               <img
                 src={resolveImage(url)}
-                className="w-20 h-20 object-cover rounded-xl"
+                alt={`Мініатюра ${idx + 1}`}
+                className="w-20 h-20 object-cover"
               />
             </button>
           ))}
