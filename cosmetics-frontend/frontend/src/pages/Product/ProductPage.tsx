@@ -12,15 +12,10 @@ import { useCartStore } from "@/store/cart.store";
 import { api } from "@/core/api/axios";
 import type { Product } from "@/features/products/model/product.types";
 import { useReviews } from "@/features/reviews/hooks/useReviews";
-
-// Завжди віддає повний URL або placeholder
-function resolveImage(src?: string) {
-  if (src && src.startsWith("http")) return src;
-  return "https://placehold.co/900x900?text=No+Image";
-}
+import { resolveImage } from "@/shared/lib/resolveImage";
 
 export default function ProductPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuthStore();
   const cart = useCartStore();
 
@@ -54,7 +49,7 @@ export default function ProductPage() {
     fetchReviews(id);
   }, [id, fetchReviews]);
 
-  // Масив фото (тільки URL з бекенду)
+  // Масив фото
   const images = useMemo(() => {
     if (!product) return ["https://placehold.co/900x900?text=No+Image"];
     return Array.isArray(product.images) && product.images.length > 0
@@ -132,10 +127,9 @@ export default function ProductPage() {
                 <button
                   key={idx}
                   onClick={() => setActiveImage(idx)}
-                  className={
-                    "border rounded-xl overflow-hidden w-20 h-20 shrink-0 " +
-                    (idx === activeImage ? "border-white/60" : "border-neutral-800 hover:border-neutral-600")
-                  }
+                  className={`border rounded-xl overflow-hidden w-20 h-20 shrink-0 ${
+                    idx === activeImage ? "border-white/60" : "border-neutral-800 hover:border-neutral-600"
+                  }`}
                 >
                   <img src={resolveImage(src)} alt={`thumb-${idx}`} className="w-full h-full object-cover" />
                 </button>
@@ -169,94 +163,56 @@ export default function ProductPage() {
               <Button variant="outline">Оформити зараз</Button>
             </NavLink>
           </div>
-
-          <div className="border border-neutral-800 bg-neutral-900/60 rounded-2xl p-4">
-            <div className="font-semibold text-white mb-2">Доставка та гарантія</div>
-            <ul className="text-sm text-neutral-300 space-y-2">
-              <li>• Доставка 1–3 дні (залежить від міста)</li>
-              <li>• Повернення протягом 14 днів</li>
-              <li>• Підтримка: /contact</li>
-            </ul>
-          </div>
         </div>
       </div>
 
       {/* REVIEWS */}
       <div className="mt-12 space-y-5">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Відгуки</h2>
-            <p className="text-sm text-neutral-400">Публічні відгуки по цьому товару.</p>
+        <h2 className="text-2xl font-bold text-white">Відгуки</h2>
+
+        {!canCreate ? (
+          <div className="text-sm text-neutral-400">Увійдіть, щоб залишити відгук.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+            <div className="md:col-span-1">
+              <label className="text-xs text-neutral-400 block mb-1">Рейтинг</label>
+              <Select value={String(rating)} onChange={(e) => setRating(Number(e.target.value))}>
+                {[5, 4, 3, 2, 1].map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="md:col-span-4">
+              <label className="text-xs text-neutral-400 block mb-1">Коментар</label>
+              <Input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Ваш відгук…" />
+            </div>
+
+            <div className="md:col-span-1 flex items-end">
+              <Button onClick={onCreateReview} className="w-full">
+                Додати
+              </Button>
+            </div>
           </div>
+        )}
 
-          <NavLink to="/reviews" className="text-sm text-neutral-200 hover:text-white underline">
-            Дивитися всі відгуки →
-          </NavLink>
-        </div>
-
-        {/* CREATE REVIEW */}
-        <div className="border border-neutral-800 bg-neutral-900/60 rounded-2xl p-4">
-          <div className="font-semibold text-white mb-3">Залишити відгук</div>
-
-          {!canCreate ? (
-            <div className="text-sm text-neutral-400">Увійдіть, щоб залишити відгук.</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-              <div className="md:col-span-1">
-                <label className="text-xs text-neutral-400 block mb-1">Рейтинг</label>
-                <Select value={String(rating)} onChange={(e) => setRating(Number(e.target.value))}>
-                  {[5, 4, 3, 2, 1].map((v) => (
-                    <option key={v} value={v}>
-                      {v}
-                    </option>
-                  ))}
-                </Select>
+        {reviews.map((r: any) => (
+          <div key={r._id} className="border border-neutral-800 bg-neutral-900/60 rounded-2xl p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                ⭐ <span className="text-gold-300 font-semibold">{r.rating ?? "-"}</span> / 5
               </div>
-
-              <div className="md:col-span-4">
-                <label className="text-xs text-neutral-400 block mb-1">Коментар</label>
-                <Input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Ваш відгук…" />
-              </div>
-
-              <div className="md:col-span-1 flex items-end">
-                <Button onClick={onCreateReview} className="w-full">
-                  Додати
+              {canDelete(r) && (
+                <Button variant="outline" onClick={() => deleteReview(r._id)}>
+                  Видалити
                 </Button>
-              </div>
+              )}
             </div>
-          )}
-        </div>
-
-        {/* LIST REVIEWS */}
-        <div className="space-y-3">
-          {loading && <div className="text-neutral-400">Завантаження…</div>}
-          {error && <div className="text-red-300 text-sm">{error}</div>}
-
-          {!loading && reviews.length === 0 && <div className="text-neutral-500">Поки немає відгуків.</div>}
-
-          {reviews.map((r: any) => (
-            <div key={r._id} className="border border-neutral-800 bg-neutral-900/60 rounded-2xl p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-sm text-neutral-300">
-                    ⭐ <span className="text-gold-300 font-semibold">{r.rating ?? "-"}</span> / 5
-                  </div>
-                  <div className="text-xs text-neutral-500">
-                    {r.createdAt ? new Date(r.createdAt).toLocaleString("uk-UA") : ""}
-                  </div>
-                </div>
-
-                {canDelete(r) && (
-                  <Button variant="outline" onClick={() => deleteReview(r._id)}>
-                    Видалити
-                  </Button>
-                )}
-              </div>
-
-              <div className="text-neutral-200 text-sm mt-2">{r.comment || r.text || r.message || ""}</div>
-            </div>
-          ))}
-        </div>
+            <div className="text-neutral-200 text-sm mt-2">{r.comment || r.text || r.message || ""}</div>
+          </div>
+        ))}
       </div>
     </>
   );
