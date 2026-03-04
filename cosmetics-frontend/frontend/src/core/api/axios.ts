@@ -4,23 +4,25 @@ import { API_URL } from "@/core/config/env";
 
 export const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // якщо в тебе refresh/access cookies
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken"); // або звідки ти береш
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
 api.interceptors.response.use(
-  (r) => r,
-  (err) => {
-    // щоб не падало HTML -> JSON
-    const contentType = err?.response?.headers?.["content-type"] || "";
+  (response) => response,
+  (error) => {
+    const contentType = error?.response?.headers?.["content-type"] || "";
     if (contentType.includes("text/html")) {
-      err.message = "Server returned HTML (maybe proxy/timeout).";
+      error.message = "Server returned HTML instead of JSON (timeout / proxy / crash).";
     }
-    return Promise.reject(err);
+    return Promise.reject(error);
   }
 );
