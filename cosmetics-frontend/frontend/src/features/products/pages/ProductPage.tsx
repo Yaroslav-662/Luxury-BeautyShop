@@ -12,12 +12,7 @@ import { useCartStore } from "@/features/cart/model/cart.store";
 import { api } from "@/core/api/axios";
 import type { Product } from "@/features/products/model/product.types";
 import { useReviews } from "@/features/reviews/hooks/useReviews";
-
-function resolveImage(src?: string) {
-  if (!src) return "https://placehold.co/900x900?text=No+Image";
-  if (src.startsWith("http://") || src.startsWith("https://")) return src;
-  return src;
-}
+import { resolveImage } from "@/shared/lib/resolveImage";
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,8 +23,7 @@ export default function ProductPage() {
   const [pLoading, setPLoading] = useState(false);
   const [pError, setPError] = useState<string | null>(null);
 
-  const { reviews, loading, error, fetchReviews, createReview, deleteReview } =
-    useReviews();
+  const { reviews, fetchReviews, createReview, deleteReview } = useReviews();
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -55,8 +49,7 @@ export default function ProductPage() {
   }, [id]);
 
   useEffect(() => {
-    if (!id) return;
-    fetchReviews(id);
+    if (id) fetchReviews(id);
   }, [id, fetchReviews]);
 
   const images = useMemo<string[]>(() => {
@@ -105,17 +98,16 @@ export default function ProductPage() {
     }
   }
 
- function addToCart() {
-  if (!product) return;
+  function addToCart() {
+    if (!product) return;
 
-  cart.addToCart({
-    id: product._id,
-    title: product.name,
-    price: product.price,
-    imageUrl: resolveImage(images[0]),
-  });
-}
-
+    cart.addToCart({
+      id: product._id,
+      title: product.name,
+      price: product.price,
+      imageUrl: resolveImage(images[0]),
+    });
+  }
 
   if (pLoading) return <div className="text-neutral-300">Завантаження…</div>;
 
@@ -144,7 +136,7 @@ export default function ProductPage() {
           <div className="border border-neutral-800 bg-neutral-900/40 rounded-2xl overflow-hidden">
             <img
               src={resolveImage(images[activeImage])}
-              alt={product.name}
+              alt={`Фото товару: ${product.name}`}
               className="w-full aspect-square object-cover"
             />
           </div>
@@ -154,6 +146,8 @@ export default function ProductPage() {
               {images.map((src, idx) => (
                 <button
                   key={idx}
+                  type="button"
+                  aria-label={`Показати фото ${idx + 1}`}
                   onClick={() => setActiveImage(idx)}
                   className={`border rounded-xl overflow-hidden w-20 h-20 shrink-0 ${
                     idx === activeImage
@@ -163,7 +157,7 @@ export default function ProductPage() {
                 >
                   <img
                     src={resolveImage(src)}
-                    alt={`thumb-${idx}`}
+                    alt={`Мініатюра ${idx + 1} товару ${product.name}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -203,9 +197,13 @@ export default function ProductPage() {
           )}
 
           <div className="flex gap-3">
-            <Button onClick={addToCart}>Додати в кошик</Button>
+            <Button onClick={addToCart} aria-label="Додати товар у кошик">
+              Додати в кошик
+            </Button>
             <NavLink to="/checkout">
-              <Button variant="outline">Оформити зараз</Button>
+              <Button variant="outline" aria-label="Перейти до оформлення">
+                Оформити зараз
+              </Button>
             </NavLink>
           </div>
         </div>
@@ -258,9 +256,7 @@ export default function ProductPage() {
             className="border border-neutral-800 bg-neutral-900/60 rounded-2xl p-4"
           >
             <div className="flex justify-between">
-              <div>
-                ⭐ {r.rating} / 5
-              </div>
+              <div>⭐ {r.rating} / 5</div>
               {canDelete(r) && (
                 <Button
                   variant="outline"
