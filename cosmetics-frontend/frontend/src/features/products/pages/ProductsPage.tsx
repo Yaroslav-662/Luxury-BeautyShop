@@ -19,9 +19,7 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { reviews, fetchReviews, createReview, deleteReview } = useReviews();
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
+  const { reviews, fetchReviews } = useReviews();
 
   useEffect(() => {
     if (!id) return;
@@ -70,15 +68,23 @@ export default function ProductPage() {
         <div className="space-y-4">
           <img
             src={resolveImage(images[active])}
+            alt={`Фото товару: ${product.name}`}
             className="w-full aspect-square object-cover rounded-2xl"
           />
 
           {images.length > 1 && (
             <div className="flex gap-3">
               {images.map((img, i) => (
-                <button key={i} onClick={() => setActive(i)}>
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Показати фото ${i + 1}`}
+                  onClick={() => setActive(i)}
+                  className="rounded-xl overflow-hidden"
+                >
                   <img
                     src={resolveImage(img)}
+                    alt={`Мініатюра ${i + 1} товару ${product.name}`}
                     className="w-20 h-20 object-cover rounded-xl"
                   />
                 </button>
@@ -97,9 +103,14 @@ export default function ProductPage() {
           )}
 
           <div className="flex gap-3">
-            <Button onClick={addToCart}>Додати в кошик</Button>
+            <Button onClick={addToCart} aria-label="Додати товар у кошик">
+              Додати в кошик
+            </Button>
+
             <NavLink to="/checkout">
-              <Button variant="outline">Оформити</Button>
+              <Button variant="outline" aria-label="Перейти до оформлення замовлення">
+                Оформити
+              </Button>
             </NavLink>
           </div>
         </div>
