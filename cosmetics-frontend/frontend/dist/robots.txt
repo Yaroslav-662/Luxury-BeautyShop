@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://your-domain.com/sitemap.xml
-
-# Заборона індексації service worker та маніфесту
-Disallow: /sw.js
-Disallow: /manifest.json
