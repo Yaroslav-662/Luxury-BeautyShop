@@ -1,5 +1,5 @@
 // src/admin/Products/CreateProduct.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/core/api/axios";
 
@@ -12,6 +12,7 @@ const MAX_IMAGES = 10;
 
 export default function CreateProduct() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +38,8 @@ export default function CreateProduct() {
   // ─── КРОК 1: завантажити фото на Cloudinary ───────────────────────────────
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !files.length) return;
-    e.target.value = "";
+    if (!files || files.length === 0) return;
+
     setError(null);
 
     const freeSlots = MAX_IMAGES - form.imagesUrls.length;
@@ -48,16 +49,24 @@ export default function CreateProduct() {
     }
 
     const selected = Array.from(files).slice(0, freeSlots);
+
     const fd = new FormData();
-    selected.forEach((file) => fd.append("images", file));
+    selected.forEach((file) => {
+      fd.append("images", file, file.name);
+    });
+
+    // Скидаємо input
+    if (fileInputRef.current) fileInputRef.current.value = "";
 
     setUploading(true);
     try {
-      // POST /api/upload/products → { urls: string[] }
       const res = await api.post<{ urls: string[] }>(
         "/api/upload/products",
         fd,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          // НЕ вказуємо Content-Type вручну — браузер сам додасть boundary
+          headers: { "Content-Type": undefined },
+        }
       );
 
       const urls: string[] = Array.isArray(res.data?.urls)
@@ -99,7 +108,6 @@ export default function CreateProduct() {
 
     setSaving(true);
     try {
-      // Надсилаємо JSON — бекенд читає imagesUrls з req.body
       await api.post("/api/products", {
         name: form.name.trim(),
         price: Number(form.price),
@@ -219,7 +227,17 @@ export default function CreateProduct() {
             Фото товару ({form.imagesUrls.length}/{MAX_IMAGES})
           </label>
 
-          {/* Превʼю */}
+          {/* Прихований input — керується виключно через ref.click() */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            multiple
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+
+          {/* Превʼю завантажених фото */}
           {form.imagesUrls.length > 0 && (
             <div className="grid grid-cols-3 gap-3 mb-3">
               {form.imagesUrls.map((url) => (
@@ -241,25 +259,16 @@ export default function CreateProduct() {
             </div>
           )}
 
-          {/* Кнопка вибору файлів */}
+          {/* Кнопка відкриває file picker через ref */}
           {form.imagesUrls.length < MAX_IMAGES && (
-            <label
-              className={`inline-flex items-center gap-2 cursor-pointer border rounded px-4 py-2 text-sm font-medium transition-colors
-                ${uploading
-                  ? "opacity-50 cursor-not-allowed bg-gray-100"
-                  : "hover:bg-gray-50"
-                }`}
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 border rounded px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                disabled={uploading}
-                onChange={handleFileChange}
-              />
               {uploading ? "⏳ Завантаження на Cloudinary..." : "📎 Додати фото"}
-            </label>
+            </button>
           )}
         </div>
 
