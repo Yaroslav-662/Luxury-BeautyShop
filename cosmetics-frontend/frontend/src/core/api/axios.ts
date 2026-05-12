@@ -8,7 +8,11 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  // ✅ "access_token" — саме такий ключ використовується в tokenStore
+  const token =
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("accessToken");
+
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -21,7 +25,8 @@ api.interceptors.response.use(
   (error) => {
     const contentType = error?.response?.headers?.["content-type"] || "";
     if (contentType.includes("text/html")) {
-      error.message = "Server returned HTML instead of JSON (timeout / proxy / crash).";
+      error.message =
+        "Server returned HTML instead of JSON (timeout / proxy / crash).";
     }
     return Promise.reject(error);
   }
