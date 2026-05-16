@@ -1,41 +1,76 @@
 // src/features/orders/OrderList.tsx
 import React from "react";
-import type { Order } from "@/features/orders/model/order.types";
+import { Link } from "react-router-dom";
+import type { Order, OrderStatus } from "@/features/orders/model/order.types";
 
-export function OrderList({ orders }: { orders: Order[] }) {
-  if (!orders.length) {
-    return <div className="text-neutral-400">Замовлень поки немає.</div>;
+const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: string }> = {
+  pending:    { label: "Очікує",       color: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30", icon: "⏳" },
+  paid:       { label: "Оплачено",     color: "bg-blue-500/15 text-blue-300 border-blue-500/30",       icon: "✅" },
+  processing: { label: "Обробляється", color: "bg-purple-500/15 text-purple-300 border-purple-500/30", icon: "⚙️" },
+  shipped:    { label: "Відправлено",  color: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30", icon: "🚚" },
+  delivered:  { label: "Доставлено",   color: "bg-green-500/15 text-green-300 border-green-500/30",    icon: "📦" },
+  cancelled:  { label: "Скасовано",    color: "bg-red-500/15 text-red-300 border-red-500/30",          icon: "❌" },
+};
+
+interface Props {
+  orders: Order[];
+}
+
+export const OrderList: React.FC<Props> = ({ orders }) => {
+  if (orders.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <div className="text-4xl mb-3">📦</div>
+        <p className="text-neutral-400 text-sm">У вас ще немає замовлень.</p>
+        <Link to="/shop" className="text-sm text-yellow-400 hover:underline mt-2 block">
+          Перейти до каталогу →
+        </Link>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-3">
-      {orders.map((o) => (
-        <div
-          key={o._id}
-          className="border border-neutral-800 bg-neutral-900/60 rounded-2xl p-4"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-white font-semibold">Замовлення #{o._id.slice(-6)}</div>
-              <div className="text-xs text-neutral-500">
-                {new Date(o.createdAt).toLocaleString("uk-UA")}
-                {" · "}
-                {o.paymentMethod || "—"}
-                {" · "}
-                {o.address || "—"}
-              </div>
+      {orders.map((order) => {
+        const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
+        return (
+          <div
+            key={order._id}
+            className="border border-neutral-800 bg-neutral-900/60 rounded-xl p-4 flex justify-between items-start gap-4 hover:border-neutral-700 transition-colors"
+          >
+            {/* Ліва частина */}
+            <div className="space-y-1.5 min-w-0">
+              <p className="text-xs text-neutral-500">
+                #{order._id.slice(-8).toUpperCase()}
+              </p>
+              <p className="text-lg font-bold text-yellow-400">
+                {order.total?.toFixed(2)} ₴
+              </p>
+              <p className="text-xs text-neutral-500">
+                {new Date(order.createdAt).toLocaleDateString("uk-UA", {
+                  day: "2-digit", month: "long", year: "numeric",
+                })}
+              </p>
+              {order.address && (
+                <p className="text-xs text-neutral-500 truncate max-w-xs">
+                  📍 {order.address}
+                </p>
+              )}
             </div>
-            <div className="text-sm">
-              <span className="text-neutral-400">Статус: </span>
-              <span className="text-gold-300 font-semibold">{o.status}</span>
-            </div>
-          </div>
 
-          <div className="text-xs text-neutral-400 mt-2">
-            Позицій: {o.items?.length || 0} · Сума: {o.total} ₴
+            {/* Права частина */}
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${cfg.color}`}>
+                {cfg.icon} {cfg.label}
+              </span>
+              <p className="text-xs text-neutral-500">
+                {order.items?.length || 0} товар
+                {(order.items?.length || 0) === 1 ? "" : (order.items?.length || 0) < 5 ? "и" : "ів"}
+              </p>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
-}
+};
