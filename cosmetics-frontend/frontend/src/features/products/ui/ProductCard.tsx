@@ -17,12 +17,18 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
 
   const imageSrc = resolveImage(product.images?.[0]);
 
+  // Рахуємо ціну зі знижкою
+  const discount = product.discount ?? 0;
+  const finalPrice = product.discountPrice ??
+    (discount > 0 ? Math.round(product.price * (1 - discount / 100)) : product.price);
+  const hasDiscount = discount > 0 || (product.discountPrice !== undefined && product.discountPrice < product.price);
+
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
     add({
       _id: product._id,
       name: product.name,
-      price: product.price,
+      price: finalPrice,
       image: imageSrc,
     });
   }
@@ -32,13 +38,20 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
     fav.toggle({
       _id: product._id,
       name: product.name,
-      price: product.price,
+      price: finalPrice,
       images: product.images,
     });
   }
 
   return (
     <div className="bg-zinc-900 rounded-xl overflow-hidden relative group">
+      {/* Знижка badge */}
+      {hasDiscount && (
+        <div className="absolute top-3 left-3 z-10 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg">
+          -{discount}%
+        </div>
+      )}
+
       {/* Кнопка обраних */}
       <button
         onClick={handleToggleFav}
@@ -68,12 +81,22 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
       {/* Інфо */}
       <div className="p-4 space-y-2">
         <Link to={`/product/${product._id}`}>
-          <div className="font-semibold text-white hover:text-yellow-400 transition-colors line-clamp-2">
+          <div className="font-semibold text-white hover:text-yellow-400 transition-colors line-clamp-2 text-sm">
             {product.name}
           </div>
         </Link>
 
-        <div className="text-neutral-400 text-sm">{product.price} ₴</div>
+        {/* Ціна */}
+        <div className="flex items-center gap-2">
+          <span className="text-yellow-400 font-bold text-lg">{finalPrice} ₴</span>
+          {hasDiscount && (
+            <span className="text-neutral-500 text-sm line-through">{product.price} ₴</span>
+          )}
+        </div>
+
+        {product.stock === 0 && (
+          <span className="text-xs text-red-400">Немає в наявності</span>
+        )}
 
         <button
           onClick={handleAddToCart}
