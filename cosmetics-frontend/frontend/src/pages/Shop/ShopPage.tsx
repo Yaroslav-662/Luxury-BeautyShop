@@ -9,7 +9,7 @@ import type { Product } from "@/features/products/model/product.types";
 import type { Category } from "@/features/categories/model/category.types";
 
 const PAGE_SIZE = 12;
-type Sort = "" | "newest" | "price-asc" | "price-desc";
+type Sort = "" | "newest" | "price-asc" | "price-desc" | "discount";
 
 // ─── Sidebar винесений ЗА МЕЖІ ShopPage ─────────────────────────────────────
 // Це критично — якщо Sidebar всередині ShopPage, React перестворює його
