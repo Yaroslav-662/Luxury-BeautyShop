@@ -25,86 +25,62 @@ export default function CreateProduct() {
     stock: "",
     category: "",
     description: "",
+    discount: "",       // ✅ знижка %
     imagesUrls: [] as string[],
   });
 
   useEffect(() => {
-    api
-      .get("/api/categories")
+    api.get("/api/categories")
       .then((res) => setCategories(res.data))
       .catch(() => setCategories([]));
   }, []);
 
-  // ─── КРОК 1: завантажити фото на Cloudinary ───────────────────────────────
+  // ─── Завантаження фото → Cloudinary ───────────────────────────────────────
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
     setError(null);
 
     const freeSlots = MAX_IMAGES - form.imagesUrls.length;
-    if (freeSlots <= 0) {
-      setError(`Максимум ${MAX_IMAGES} фото.`);
-      return;
-    }
+    if (freeSlots <= 0) return setError(`Максимум ${MAX_IMAGES} фото.`);
 
     const selected = Array.from(files).slice(0, freeSlots);
-
     const fd = new FormData();
-    selected.forEach((file) => {
-      fd.append("images", file, file.name);
-    });
-
-    // Скидаємо input
+    selected.forEach((file) => fd.append("images", file, file.name));
     if (fileInputRef.current) fileInputRef.current.value = "";
 
     setUploading(true);
     try {
       const res = await api.post<{ urls: string[] }>(
-        "/api/upload/products",
-        fd,
-        {
-          // НЕ вказуємо Content-Type вручну — браузер сам додасть boundary
-          headers: { "Content-Type": undefined },
-        }
+        "/api/upload/products", fd,
+        { headers: { "Content-Type": undefined } }
       );
-
-      const urls: string[] = Array.isArray(res.data?.urls)
-        ? res.data.urls.filter(Boolean)
-        : [];
-
+      const urls = Array.isArray(res.data?.urls) ? res.data.urls.filter(Boolean) : [];
       if (!urls.length) throw new Error("Бекенд не повернув URL");
-
-      setForm((prev) => ({
-        ...prev,
-        imagesUrls: [...prev.imagesUrls, ...urls],
-      }));
+      setForm((prev) => ({ ...prev, imagesUrls: [...prev.imagesUrls, ...urls] }));
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Невідома помилка завантаження";
-      setError(`❌ Помилка завантаження: ${msg}`);
+      setError(`❌ Помилка завантаження: ${err?.response?.data?.message || err.message}`);
     } finally {
       setUploading(false);
     }
   };
 
-  const removeImage = (url: string) => {
-    setForm((prev) => ({
-      ...prev,
-      imagesUrls: prev.imagesUrls.filter((u) => u !== url),
-    }));
-  };
+  const removeImage = (url: string) =>
+    setForm((prev) => ({ ...prev, imagesUrls: prev.imagesUrls.filter((u) => u !== url) }));
 
-  // ─── КРОК 2: створити продукт з готовими URL ──────────────────────────────
+  // ─── Розрахунок ціни зі знижкою для preview ───────────────────────────────
+  const discountNum = Number(form.discount) || 0;
+  const priceNum = Number(form.price) || 0;
+  const finalPrice = discountNum > 0
+    ? Math.round(priceNum * (1 - discountNum / 100))
+    : priceNum;
+
+  // ─── Збереження ───────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     if (!form.name.trim()) return setError("Введіть назву товару");
-    if (!form.price || isNaN(Number(form.price)))
-      return setError("Введіть коректну ціну");
+    if (!form.price || isNaN(Number(form.price))) return setError("Введіть коректну ціну");
 
     setSaving(true);
     try {
@@ -114,16 +90,12 @@ export default function CreateProduct() {
         stock: Number(form.stock) || 0,
         category: form.category || undefined,
         description: form.description.trim(),
+        discount: discountNum,
         imagesUrls: form.imagesUrls,
       });
-
       navigate("/admin/products");
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Невідома помилка";
-      setError(`❌ Не вдалося створити товар: ${msg}`);
+      setError(err?.response?.data?.message || "Не вдалося створити товар");
     } finally {
       setSaving(false);
     }
@@ -134,88 +106,83 @@ export default function CreateProduct() {
       <h1 className="text-2xl font-bold">Створення товару</h1>
 
       {error && (
-        <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">
-          {error}
-        </div>
+        <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm">{error}</div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Назва */}
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="name">
-            Назва товару *
-          </label>
+          <label className="block text-sm font-medium mb-1">Назва товару *</label>
           <input
-            id="name"
-            type="text"
             required
-            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
         </div>
 
-        {/* Ціна / Кількість */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Ціна / Кількість / Знижка */}
+        <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="price">
-              Ціна (грн) *
-            </label>
+            <label className="block text-sm font-medium mb-1">Ціна (₴) *</label>
             <input
-              id="price"
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              type="number" min="0" step="0.01" required
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="stock">
-              Кількість
-            </label>
+            <label className="block text-sm font-medium mb-1">Кількість</label>
             <input
-              id="stock"
-              type="number"
-              min="0"
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              type="number" min="0"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
               value={form.stock}
               onChange={(e) => setForm({ ...form, stock: e.target.value })}
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Знижка (%)</label>
+            <input
+              type="number" min="0" max="100"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              placeholder="0"
+              value={form.discount}
+              onChange={(e) => setForm({ ...form, discount: e.target.value })}
+            />
+          </div>
         </div>
+
+        {/* Preview ціни зі знижкою */}
+        {discountNum > 0 && priceNum > 0 && (
+          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-2.5">
+            <span className="text-sm text-neutral-500 line-through">{priceNum} ₴</span>
+            <span className="text-green-700 font-bold text-lg">{finalPrice} ₴</span>
+            <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-lg">-{discountNum}%</span>
+          </div>
+        )}
 
         {/* Категорія */}
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="category">
-            Категорія
-          </label>
+          <label className="block text-sm font-medium mb-1">Категорія</label>
           <select
-            id="category"
-            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
             <option value="">Оберіть категорію</option>
             {categories.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
+              <option key={c._id} value={c._id}>{c.name}</option>
             ))}
           </select>
         </div>
 
         {/* Опис */}
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="description">
-            Опис товару
-          </label>
+          <label className="block text-sm font-medium mb-1">Опис товару</label>
           <textarea
-            id="description"
             rows={4}
-            className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
@@ -227,7 +194,6 @@ export default function CreateProduct() {
             Фото товару ({form.imagesUrls.length}/{MAX_IMAGES})
           </label>
 
-          {/* Прихований input — керується виключно через ref.click() */}
           <input
             ref={fileInputRef}
             type="file"
@@ -237,37 +203,30 @@ export default function CreateProduct() {
             onChange={handleFileChange}
           />
 
-          {/* Превʼю завантажених фото */}
           {form.imagesUrls.length > 0 && (
             <div className="grid grid-cols-3 gap-3 mb-3">
               {form.imagesUrls.map((url) => (
                 <div key={url} className="relative group">
                   <img
-                    src={url}
-                    alt="фото товару"
+                    src={url} alt="фото"
                     className="h-28 w-full object-cover rounded-lg border"
                   />
                   <button
-                    type="button"
-                    onClick={() => removeImage(url)}
+                    type="button" onClick={() => removeImage(url)}
                     className="absolute top-1 right-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    ✕
-                  </button>
+                  >✕</button>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Кнопка відкриває file picker через ref */}
           {form.imagesUrls.length < MAX_IMAGES && (
             <button
-              type="button"
-              disabled={uploading}
+              type="button" disabled={uploading}
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 border rounded px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 border rounded-lg px-4 py-2 text-sm font-medium hover:bg-neutral-50 disabled:opacity-50 transition-colors"
             >
-              {uploading ? "⏳ Завантаження на Cloudinary..." : "📎 Додати фото"}
+              {uploading ? "⏳ Завантаження..." : "📎 Додати фото"}
             </button>
           )}
         </div>
@@ -275,17 +234,14 @@ export default function CreateProduct() {
         {/* Кнопки */}
         <div className="flex gap-3 pt-2">
           <button
-            type="submit"
-            disabled={saving || uploading}
-            className="bg-black text-white px-6 py-2 rounded text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            type="submit" disabled={saving || uploading}
+            className="bg-black text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-neutral-800 disabled:opacity-50 transition-colors"
           >
             {saving ? "Створення..." : "Створити товар"}
           </button>
           <button
-            type="button"
-            onClick={() => navigate("/admin/products")}
-            disabled={saving}
-            className="border px-6 py-2 rounded text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            type="button" onClick={() => navigate("/admin/products")}
+            className="border px-6 py-2 rounded-lg text-sm font-medium hover:bg-neutral-50 transition-colors"
           >
             Відмінити
           </button>
