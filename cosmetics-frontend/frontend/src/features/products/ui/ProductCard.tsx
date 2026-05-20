@@ -35,28 +35,28 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
 
   return (
     <div className="bg-zinc-900 rounded-xl overflow-hidden relative group flex flex-col h-full">
-      {/* Знижка */}
       {hasDiscount && (
         <div className="absolute top-2 left-2 z-10 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
           -{discount}%
         </div>
       )}
 
-      {/* Обрані */}
-      <button onClick={handleToggleFav}
-        className={`absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center rounded-full text-xs transition-colors
-          ${isFav ? "bg-rose-500 text-white" : "bg-black/50 text-white hover:bg-rose-500"}`}>
+      <button
+        onClick={handleToggleFav}
+        className={`absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center rounded-full text-xs transition-all
+          ${isFav ? "bg-rose-500 text-white scale-110" : "bg-black/50 text-white hover:bg-rose-500 hover:scale-110"}`}
+      >
         {isFav ? "♥" : "♡"}
       </button>
 
-      {/* Фото — квадратний контейнер, фото вписується повністю */}
-      <Link to={`/product/${product._id}`} className="block">
-        <div className="relative w-full bg-white" style={{ paddingBottom: "100%" }}>
+      {/* Білий фон + object-contain */}
+      <Link to={`/product/${product._id}`} className="block bg-white">
+        <div className="relative w-full" style={{ paddingBottom: "100%" }}>
           <img
             src={imageSrc}
             alt={product.name}
             loading="lazy"
-            className="absolute inset-0 w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+            className="absolute inset-0 w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "https://placehold.co/400x400?text=No+Image";
             }}
@@ -64,7 +64,6 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
         </div>
       </Link>
 
-      {/* Інфо */}
       <div className="p-3 flex flex-col flex-1 space-y-1.5">
         <Link to={`/product/${product._id}`}>
           <div className="font-medium text-white hover:text-yellow-400 transition-colors line-clamp-2 text-xs leading-snug">
@@ -83,14 +82,15 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
           <span className="text-[10px] text-red-400">Немає в наявності</span>
         )}
 
-        <div className="flex-1 flex items-end">
+        <div className="flex-1 flex items-end pt-1">
           <button
             onClick={handleAddToCart}
             disabled={product.stock <= 0}
-            className={`w-full py-1.5 px-2 rounded text-xs font-medium transition-colors mt-1
+            className={`w-full py-1.5 rounded text-xs font-medium transition-colors
               ${product.stock > 0
                 ? "bg-white text-black hover:bg-yellow-400"
-                : "bg-zinc-700 text-zinc-500 cursor-not-allowed"}`}>
+                : "bg-zinc-700 text-zinc-500 cursor-not-allowed"}`}
+          >
             {product.stock > 0 ? "Додати в кошик" : "Немає"}
           </button>
         </div>
