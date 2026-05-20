@@ -67,3 +67,4 @@ export const useFavoritesStore = create<FavState>((set, get) => ({
     toast.info("Список обраних очищено", "🗑️");
   },
 }));
+
