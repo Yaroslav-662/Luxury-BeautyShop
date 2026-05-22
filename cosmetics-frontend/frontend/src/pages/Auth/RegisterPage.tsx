@@ -22,24 +22,29 @@ export default function RegisterPage() {
   if (success) {
     return (
       <>
-        <MetaTags title="Register" />
-        <div className="min-h-[60vh] flex items-center justify-center px-4">
-          <div className="w-full max-w-md text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto">
-              <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <MetaTags title="Реєстрація" />
+        <div className="min-h-[70vh] flex items-center justify-center px-4">
+          <div className="w-full max-w-sm text-center space-y-5">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto">
+              <svg className="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-white">Акаунт створено</h2>
-            <p className="text-sm text-neutral-400">
-              Ми надіслали лист підтвердження на <span className="text-white">{email}</span>.
-              Перевірте пошту та підтвердіть адресу щоб увійти.
+            <div>
+              <h2 className="text-lg font-semibold text-white">Акаунт створено</h2>
+              <p className="text-sm text-neutral-400 mt-1">
+                Ми надіслали листа на <span className="text-white font-medium">{email}</span>.
+                Підтвердіть адресу щоб увійти.
+              </p>
+            </div>
+            <p className="text-xs text-neutral-500">
+              Не отримали листа? Перевірте папку Спам.
             </p>
             <NavLink
               to="/auth/login"
-              className="inline-block mt-2 text-sm text-gold-300 hover:text-gold-200 underline underline-offset-4"
+              className="inline-block text-sm text-gold-300 hover:text-gold-200 transition-colors"
             >
-              Перейти до входу
+              Перейти до входу →
             </NavLink>
           </div>
         </div>
@@ -49,14 +54,14 @@ export default function RegisterPage() {
 
   return (
     <>
-      <MetaTags title="Register" />
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <div className="w-full max-w-md space-y-6">
+      <MetaTags title="Реєстрація" />
+      <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-sm space-y-6">
           <div>
-            <h1 className="text-2xl font-semibold text-white">Створити акаунт</h1>
+            <h1 className="text-2xl font-semibold text-white tracking-tight">Створити акаунт</h1>
             <p className="text-sm text-neutral-400 mt-1">
               Вже є акаунт?{" "}
-              <NavLink to="/auth/login" className="text-gold-300 hover:text-gold-200">
+              <NavLink to="/auth/login" className="text-gold-300 hover:text-gold-200 transition-colors">
                 Увійти
               </NavLink>
             </p>
@@ -69,50 +74,30 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                Ім'я
-              </label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ірина Коваленко"
-                required
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-neutral-400 tracking-wider uppercase">Ім'я</label>
+              <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ірина Коваленко" required />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                Email
-              </label>
-              <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="iryna@example.com"
-                type="email"
-                required
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-neutral-400 tracking-wider uppercase">Email</label>
+              <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="iryna@example.com" type="email" required />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                Пароль
-              </label>
-              <Input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Мінімум 8 символів"
-                type="password"
-                required
-              />
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-neutral-400 tracking-wider uppercase">Пароль</label>
+              <Input value={password} onChange={e => setPassword(e.target.value)} placeholder="Мінімум 8 символів" type="password" required />
             </div>
 
             <Button disabled={loading} type="submit" className="w-full">
               {loading ? "Створення акаунту..." : "Зареєструватись"}
             </Button>
 
-            <p className="text-xs text-neutral-500 text-center">
-              Реєструючись, ви погоджуєтесь з умовами використання та політикою конфіденційності.
+            <p className="text-xs text-neutral-600 text-center leading-relaxed">
+              Реєструючись, ви погоджуєтесь з{" "}
+              <NavLink to="/terms" className="text-neutral-400 hover:text-white">умовами використання</NavLink>
+              {" "}та{" "}
+              <NavLink to="/privacy" className="text-neutral-400 hover:text-white">політикою конфіденційності</NavLink>.
             </p>
           </form>
         </div>
