@@ -60,7 +60,8 @@ export const GuestRoutes = (
     <Route path="/auth/verify/:token" element={<VerifyEmailPage />} />
     <Route path="/auth/forgot" element={<ForgotPasswordPage />} />
     <Route path="/auth/reset/:token" element={<ResetPasswordPage />} />
-
+    <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+    
     <Route path="/about" element={<AboutPage />} />
     <Route path="/contact" element={<ContactPage />} />
     <Route path="/gift-cards" element={<GiftCardsPage />} />
