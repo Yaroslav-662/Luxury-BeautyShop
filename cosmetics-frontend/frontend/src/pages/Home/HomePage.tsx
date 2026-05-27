@@ -144,12 +144,21 @@ const HomePage: React.FC = () => {
       {categories.length > 0 && (
         <section className="px-4 md:px-8 mt-6">
           <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {categories.slice(0, 4).map((c) => (
-              <Link key={c._id} to={`/shop?category=${c._id}`}
-                className="group border border-neutral-800 rounded-xl p-4 text-center text-sm font-medium text-neutral-400 hover:border-yellow-500/40 hover:text-yellow-400 hover:bg-yellow-500/5 transition-all">
-                {c.name}
-              </Link>
-            ))}
+            {categories.map((c) => (
+  <Link
+    key={c._id}
+    to={`/shop?category=${c._id}`}
+    className="group border border-neutral-800 rounded-xl p-4 hover:border-yellow-500/40 hover:bg-yellow-500/5 transition-all"
+  >
+    <div className="text-sm font-semibold text-neutral-200 group-hover:text-yellow-400 transition-colors">
+      {c.name}
+    </div>
+
+    <div className="text-xs text-neutral-500 mt-2 line-clamp-2">
+      {c.description || "Преміальна косметика та beauty товари"}
+    </div>
+  </Link>
+))}
           </div>
         </section>
       )}
