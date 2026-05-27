@@ -72,9 +72,9 @@ const HomePage: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  const newProducts = useMemo(() => [...items].slice(0, 12), [items]);
+  const newProducts = useMemo(() => [...items], [items]);
   const saleProducts = useMemo(
-    () => items.filter((p) => (p as any).discount > 0).slice(0, 12),
+    () => items.filter((p) => (p as any).discount > 0),
     [items]
   );
   const highlights = saleProducts.length > 0 ? saleProducts : newProducts;
